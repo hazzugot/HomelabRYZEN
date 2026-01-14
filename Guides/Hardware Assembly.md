@@ -21,11 +21,13 @@ This guide details the physical assembly of all server components into the custo
 
 It is important to plan the layout of your server before you start building. A quick sketch can help you visualize where each component will go and ensure that you have enough space for everything.
 
-*Photo Placeholder: Show a photo of the rough plan sketched on a pad with tray positions in the case.*
+<img width="953" height="1270" alt="image" src="https://github.com/user-attachments/assets/d051b68f-3f4d-4a3e-a4c3-7bc131358213" />
+
 
 1.  **Print all the pieces for the chassis.**
 
-    *Photo Placeholder: Show a photo of all the printed pieces.*
+    <img width="833" height="790" alt="image" src="https://github.com/user-attachments/assets/c757a844-85e9-42b0-954a-d9c65581617c" />
+
 
 ### Step 1: Brass Inserts
 
@@ -34,56 +36,70 @@ It is important to plan the layout of your server before you start building. A q
     *   **ITX Mount:** Uses M3 x 5.7 mm brass inserts and M3 x 6mm bolts.
     *   **NAS Case:** Uses M6 Brass Inserts (8mm OD, 4mm Length) and M6 x 10mm screws.
 
-    *Photo Placeholder: Show a close-up of the different brass inserts.*
-    *Photo Placeholder: Show the process of heating a brass insert with a soldering iron.*
-    *Photo Placeholder: Show the ITX mount and NAS case with inserts installed.*
+    <img width="1073" height="623" alt="image" src="https://github.com/user-attachments/assets/2dfd5339-2f7a-4d28-a52f-c9d7d5600a2b" />
+
+    <img width="650" height="721" alt="image" src="https://github.com/user-attachments/assets/a44cd1af-094a-4e6f-b912-c7b0a2ae06cf" />
+
+    <img width="953" height="1270" alt="image" src="https://github.com/user-attachments/assets/706d5393-a01f-4c13-b62e-912e157f6a27" />
+
 
 ### Step 2: Main Chassis Assembly
 
 1.  **Attach the fan to the top of the case.** This should be configured to exhaust hot air out of the top of the chassis to ensure good airflow.
 
-    *Photo Placeholder: Show the fan attached to the top panel.*
+    <img width="953" height="1270" alt="image" src="https://github.com/user-attachments/assets/256be140-ee33-4db6-b9f0-e95a006e664a" />
+
 
 2.  **Assemble the bottom of the chassis.** Screw the frame together and add the feet.
 
-    *Photo Placeholder: Show the assembled bottom frame with feet.*
+    <img width="953" height="1270" alt="image" src="https://github.com/user-attachments/assets/430c51d0-1351-4104-859f-bf5811445257" />
 
-3.  **Attach the posts to the bottom of the case.**
 
-    *Photo Placeholder: Show the posts being fixed to the bottom of the case.*
+3.  **Connect the long joints together.**
 
-4.  **Connect the long joints together.**
+    <img width="953" height="1270" alt="image" src="https://github.com/user-attachments/assets/18b0303c-de1b-4cc5-8996-09c50ac34745" />
 
-    *Photo Placeholder: Show the long joints being connected.*
+
+4.  **Attach the posts to the bottom of the case.**
+
+    <img width="851" height="905" alt="image" src="https://github.com/user-attachments/assets/5a28349d-1074-450c-a0d1-23ddb15cbbfe" />
+
 
 ### Step 3: Component Installation
 
 1.  **Assemble the motherboard.** Install the CPU, RAM, and CPU cooler onto the motherboard.
 
-    *Photo Placeholder: Show the motherboard with CPU, RAM, and cooler installed.*
+    <img width="889" height="806" alt="image" src="https://github.com/user-attachments/assets/c062676d-b158-40f2-a129-6b7b60cc41ad" />
+<img width="961" height="515" alt="image" src="https://github.com/user-attachments/assets/91fce541-7777-4440-9643-bd9d6af3f532" />
+
 
 2.  **Attach the motherboard to the ITX mount.** Also, install any PCIE expansion cards at this time.
 
-    *Photo Placeholder: Show the final motherboard assembly on the ITX mount.*
+    <img width="1045" height="724" alt="image" src="https://github.com/user-attachments/assets/bcf28ea4-dbc1-4ba1-b42c-3fb0e7d1de16" />
+
 
 3.  **Perform an initial boot test (POST).** Connect the PSU to the essential components (motherboard, CPU, one stick of RAM) and ensure the system boots into the BIOS.
 
-    *Photo Placeholder: Show a picture of the BIOS screen during the initial POST.*
+    <img width="697" height="455" alt="image" src="https://github.com/user-attachments/assets/8bb62235-3f60-43bc-82e3-6b38636319ec" />
+
 
 4.  **Insert the PSU into its bracket.**
 
-    *Photo Placeholder: Show the PSU in its bracket.*
+    <img width="785" height="886" alt="image" src="https://github.com/user-attachments/assets/e9e42165-300b-4c24-a60c-8ceec99dfc4f" />
+
 
 5.  **Assemble the NAS.** Assemble the NAS frame, connect the quick-swap cables, and fit the drives into the drive mounts.
 
-    *Photo Placeholder: Show the assembled NAS frame and the drives in their mounts.*
+    <img width="900" height="943" alt="image" src="https://github.com/user-attachments/assets/8abc326c-b4b0-4af1-bda7-9c0fcf812888" />
+
 
 ### Step 4: Final Assembly
 
 1.  **Start filling in the trays.** Install the ITX tray, NAS tray, and any other trays into the chassis. Rearrange if needed.
     > **Tip:** For heavy trays, print brackets long enough to reach both sides so they can be screwed in at the back for extra support.
 
-    *Photo Placeholder: Show the trays being inserted into the chassis.*
+    <img width="930" height="1155" alt="image" src="https://github.com/user-attachments/assets/b94f9da8-dc24-49f7-9c5f-88fa8a4a0e9a" />
+
 
 2.  **Connect all the cables.** Connect the power cables for the NAS and PC, as well as any other components that need power or data.
 
