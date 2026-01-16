@@ -13,3 +13,9 @@
 
 - **Warped 5U Posts:** The original 5U posts were warped due to the ambient temperature in the room being too cold during printing. I reprinted the posts to resolve the issue.
   <img width="953" height="1270" alt="image" src="https://github.com/user-attachments/assets/abf2ec05-060e-4ac0-9592-cd374a53ed93" />
+
+
+- **Incorrect buttons** The buttons originally purchased on Amazon had stated they were goo for PC assembly. This was not the case as they were self locking (Attempted anyway due to explicitly saying in the description) This meant a resolder of new buttons was needed. This was admittedly an oversight for me! All part of learning however.
+ <img width="921" height="401" alt="image" src="https://github.com/user-attachments/assets/cc6cbbf3-b88c-45d1-9d76-ee217cf809f5" />
+<img width="899" height="385" alt="image" src="https://github.com/user-attachments/assets/8b3e4b77-377d-43ed-a173-db341320ad81" />
+
