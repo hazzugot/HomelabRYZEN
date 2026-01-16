@@ -103,11 +103,13 @@ It is important to plan the layout of your server before you start building. A q
 
 2.  **Connect all the cables.** Connect the power cables for the NAS and PC, as well as any other components that need power or data.
 
-    *Photo Placeholder: Show some of the cable connections.*
+    <img width="953" height="1270" alt="image" src="https://github.com/user-attachments/assets/fcbed0e1-82b5-49d9-802c-3b4527daa26d" />
+
 
 3.  **Attach the top panel.** Once all components are installed and connected, attach the top panel to complete the assembly.
 
-    *Photo Placeholder: Show the finished, fully assembled server.*
+    <img width="953" height="1270" alt="image" src="https://github.com/user-attachments/assets/3fb57211-28d9-41ac-bdad-07c878488872" />
+
 
 ## Conclusion
 
