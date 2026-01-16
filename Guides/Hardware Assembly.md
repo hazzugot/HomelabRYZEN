@@ -123,4 +123,4 @@ The assembly is complete. However, some parts were not printed to an amazing sta
 *   **Connecters for 3U extension:** [https://makerworld.com/en/models/1839684-lab-rax-sturdy-long-post-joiner#profileId-1965185](https://makerworld.com/en/models/1839684-lab-rax-sturdy-long-post-joiner#profileId-1965185)
 *   **8u Skadis side panel print for multi-use:** [https://makerworld.com/en/models/1718939-lab-rax-8u-skadis-side-panels](https://makerworld.com/en/models/1718939-lab-rax-8u-skadis-side-panels)
 *   **Switch holder:** [https://makerworld.com/en/models/1495240-pi-3b-4b-5b-tp-link-sg105-mx-sw-10-rack-mount#profileId-1577663](https://makerworld.com/en/models/1495240-pi-3b-4b-5b-tp-link-sg105-mx-sw-10-rack-mount#profileId-1577663)
-*   **80mm FAN holder** [https://makerworld.com/en/models/1385530-2u-two-80mm-cooling-fan-holder-for-10-rack?from=search#profileId-1434854]
+*   **80mm FAN holder:** (https://makerworld.com/en/models/1385530-2u-two-80mm-cooling-fan-holder-for-10-rack?from=search#profileId-1434854)
