@@ -31,7 +31,7 @@ The hardware was carefully selected to balance performance, cost, and a compact 
 | :----------- | :------------------------------------------ | :------------------------------------------------------------------- |
 | **CPU**      | AMD Ryzen 7 5700G (8-Core, 16-Thread)       | Powerful processing for VMs and hardware transcoding (iGPU).         |
 | **Motherboard**| Gigabyte B550I AORUS PRO AX (Mini-ITX)      | Compact form factor with 2.5GbE LAN and Wi-Fi.                       |
-| **RAM**      | 16GB DDR4 (Mixed Speeds @ 2666MHz)          | Sufficient memory for multiple concurrent services.                  |
+| **RAM**      | 16GB DDR4 (@ 3000)          | Sufficient memory for multiple concurrent services.                  |
 | **OS Drive** | Lexar NM610PRO 500GB NVMe SSD               | Fast storage for Proxmox OS and critical VM disks.                   |
 | **Case**     | Custom 3D Printed 10-Inch Rackmount       | Tailor-made chassis for a perfect fit and optimized airflow.         |
 
