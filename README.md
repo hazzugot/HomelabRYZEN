@@ -64,9 +64,9 @@ The network is designed for flexibility and security, with different virtual mac
 
 This repository contains all the documentation for the project.
 
-- **[Guides](./guides/)**: Step-by-step installation and configuration guides for all major software components.
+- **[Guides](./Guides/)**: Step-by-step installation and configuration guides for all major software components.
 - **[Hardware.md](./Hardware.md)**: A detailed list of all hardware, including the rationale behind each choice.
-- **[Troubleshooting.md](./TROUBLESHOOTING.md)**: A log of challenges faced and the solutions implemented.
+- **[Troubleshooting.md](./Troubleshooting.md)**: A log of challenges faced and the solutions implemented.
 
 ## Future Plans
 
