@@ -48,7 +48,7 @@ The server runs a lightweight and powerful software stack to achieve its goals.
   - **Why:** A feature-rich NAS solution that runs as a virtual machine. It's configured with MergerFS to pool multiple drives into a single large volume and SnapRAID for parity-based data protection.
 
 - **Media Server:** [Jellyfin](https://jellyfin.org/)
-  - **Why:** An open-source media server for streaming content. It is deployed inside a Docker container and configured to use the AMD iGPU for hardware-accelerated transcoding, ensuring smooth playback without taxing the CPU.
+  - **Why:** An open-source media server for streaming content. It is deployed inside a Docker container and configured with NFS shares for efficient playback. It's also able to enable transcoding using the integrated CPU which may be configured in the future if the CPU can't handle the variable load.
 
 - **Remote Access:** [Nginx Proxy Manager](https://nginxproxymanager.com/)
   - **Why:** Provides easy-to-manage SSL termination and reverse proxying, allowing for secure remote access to web services like Jellyfin and OMV.
