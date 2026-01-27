@@ -3,6 +3,7 @@
 This repository documents the journey of designing, building, and configuring a compact, powerful, and custom-built 10-inch rack server. Powered by an AMD Ryzen 7 5700G, this homelab is a versatile platform for virtualization, network-attached storage (NAS), media streaming, and hands-on cybersecurity labs.
 
 The primary goal is to create a robust, energy-efficient, and expandable home server while simultaneously serving as a comprehensive portfolio piece demonstrating skills in hardware selection, system integration, virtualization, networking, and service deployment.
+
 <img width="459" height="484" alt="image" src="https://github.com/user-attachments/assets/34e65b75-5f01-4a92-8b3f-32c5a4b78199" />
 
 
