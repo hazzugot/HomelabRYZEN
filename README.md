@@ -63,8 +63,6 @@ The network is designed for flexibility and security, with different virtual mac
 
 ## Project Documentation
 
-## Project Documentation
-
   This repository contains all the documentation for the project.
 
   - **[Guides](./Guides/)**: Step-by-step installation and configuration guides
