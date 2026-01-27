@@ -63,12 +63,24 @@ The network is designed for flexibility and security, with different virtual mac
 
 ## Project Documentation
 
-This repository contains all the documentation for the project.
+## Project Documentation
 
-- **[Guides](./Guides/)**: Step-by-step installation and configuration guides for all major software components.
-- **[Hardware.md](./Hardware.md)**: A detailed list of all hardware, including the rationale behind each choice.
-- **[Troubleshooting.md](./Troubleshooting.md)**: A log of challenges faced and the solutions implemented.
+  This repository contains all the documentation for the project.
+
+  - **[Guides](./Guides/)**: Step-by-step installation and configuration guides
+  for all major software components.
+    - [Initial Build](./Guides/Initial%20Build/) - Hardware assembly and
+  component selection
+    - [Networking](./Guides/Networking/) - Network configuration and VLANs
+    - [Software and VM Deployment](./Guides/Software%20and%20VM%20deployement/)
+  - Proxmox, OMV, Jellyfin setup
+  - **[Hardware.md](./Guides/Initial%20Build/Hardware.md)**: A detailed list of
+  all hardware, including the rationale behind each choice.
+  - **[Troubleshooting.md](./Troubleshooting.md)**: A log of challenges faced
+  and the solutions implemented.
+  - **[Labs](./Labs/)**: Security lab documentation and write-ups.
+  - **[Scripts](./Scripts/)**: Utility scripts used in the project.
 
 ## Future Plans
 
-The homelab is an evolving project. For a complete list of upcoming cybersecurity labs and other planned enhancements, please see the [Future Plans](./Future_Plans.md) document.
+The homelab is an evolving project. For a complete list of upcoming cybersecurity labs and other planned enhancements, please see the [Future Plans](Labs/README.md) document.
