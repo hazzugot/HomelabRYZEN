@@ -13,11 +13,11 @@ Deploy Wazuh or Splunk with log ingestion from multiple sources. Use Kali Linux 
 
 | Component | Status |
 |-----------|--------|
-| SIEM Platform Selection | Not Started |
-| VM Deployment | Not Started |
-| Log Ingestion Setup | Not Started |
-| Attack Simulation | Not Started |
-| Dashboard & Alerts | Not Started |
+| SIEM Platform Selection | Completed |
+| VM Deployment | Completed |
+| Log Ingestion Setup | Completed |
+| Attack Simulation | Completed |
+| Dashboard & Alerts | Completed |
 
 ---
 
