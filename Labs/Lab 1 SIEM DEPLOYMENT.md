@@ -18,20 +18,20 @@ Deployed a production-grade Security Information and Event Management (SIEM) sol
 │                   AMD Ryzen 7 5700G | 32GB RAM                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐ │
-│  │  Splunk Server   │  │ Windows Victim   │  │ Existing     │ │
-│  │  Ubuntu 22.04    │  │  + Sysmon        │  │ Services:    │ │
-│  │  4vCPU | 8GB RAM │  │  2vCPU | 4GB RAM │  │ - OMV (NAS)  │ │
-│  │  100GB Storage   │  │  60GB Storage    │  │ - Jellyfin   │ │
-│  │                  │  │                  │  │ - NPM        │ │
-│  │  Services:       │  │  Forwarder:      │  │              │ │
-│  │  - Splunk Web    │  │  - Event Logs    │  │              │ │
-│  │    :8000         │  │  - Sysmon Logs   │  │              │ │
-│  │  - Indexer       │  │  - PowerShell    │  │              │ │
-│  │  - Receiver:9997 │  │  - Security Logs │  │              │ │
-│  └────────┬─────────┘  └────────┬─────────┘  └──────────────┘ │
-│           │                     │                              │
-└───────────┼─────────────────────┼──────────────────────────────┘
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐   │
+│  │  Splunk Server   │  │ Windows Victim   │  │ Existing     │   │
+│  │  Ubuntu 22.04    │  │  + Sysmon        │  │ Services:    │   │
+│  │  4vCPU | 8GB RAM │  │  2vCPU | 4GB RAM │  │ - OMV (NAS)  │   │
+│  │  100GB Storage   │  │  60GB Storage    │  │ - Jellyfin   │   │
+│  │                  │  │                  │  │ - NPM        │   │
+│  │  Services:       │  │  Forwarder:      │  │              │   │
+│  │  - Splunk Web    │  │  - Event Logs    │  │              │   │
+│  │    :8000         │  │  - Sysmon Logs   │  │              │   │
+│  │  - Indexer       │  │  - PowerShell    │  │              │   │
+│  │  - Receiver:9997 │  │  - Security Logs │  │              │   │
+│  └────────┬─────────┘  └────────┬─────────┘  └──────────────┘   │
+│           │                     │                               │
+└───────────┼─────────────────────┼───────────────────────────────┘
             │                     │
             │    Network Layer    │
             │  Lab: 10.0.0.0/24   │
@@ -539,7 +539,7 @@ This project demonstrates practical, hands-on experience with:
 **Author:** Harry Miles
 **GitHub Repository:** [hazzugot/HomelabRYZEN](https://github.com/hazzugot/HomelabRYZEN)
 **Lab Number:** 01 - SIEM Deployment with Splunk
-**Completion Date:** 2026-01-27
+**Completion Date:** 2026-02-13
 **Environment:** Proxmox VE 8.x, Splunk Enterprise 9.x, Windows 11, Kali Linux
 **Total Project Time:** 6 hours
 
