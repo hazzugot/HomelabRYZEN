@@ -7,7 +7,7 @@ Building toward a complete Mini SOC environment. This roadmap tracks progress on
 ## Priority Labs
 
 ### 1. SIEM Deployment
-![Progress](https://img.shields.io/badge/Progress-0%25-red?style=flat-square)
+![Progress](https://img.shields.io/badge/Progress-100%25-brightgreen?style=flat-square)
 
 Deploy Wazuh or Splunk with log ingestion from multiple sources. Use Kali Linux for attack simulation and observe detections.
 
