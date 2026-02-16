@@ -60,11 +60,6 @@ Proxmox Hypervisor (AMD Ryzen 7 5700G | 32GB RAM)
 - MITRE ATT&CK framework mapping
 - Incident response workflows
 
-## Documentation
-
-- [Full Lab Writeup](GITHUB_WRITEUP.md) - Detailed implementation with detection rules and portfolio highlights
-- [Step-by-Step Guide](README.md) - Complete lab instructions
-- [Quick Reference](QUICK_REFERENCE.md) - SPL queries and command cheat sheet
 
 ## Built With
 
