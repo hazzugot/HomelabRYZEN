@@ -1,0 +1,1501 @@
+# Troubleshooting Guide: Lab 00B Network Enhancement
+
+This guide covers common issues encountered during Lab 00B and their solutions. Problems are organized by phase and component.
+
+**General Troubleshooting Approach:**
+
+1. Identify which layer the problem occurs (Physical, Data Link, Network, Application)
+2. Test connectivity incrementally (ping gateway, then remote host, then internet)
+3. Verify configuration hasn't been reverted (check actual config vs expected)
+4. Check logs for error messages
+5. Rollback if necessary and retry
+
+---
+
+## Table of Contents
+
+- [Pre-Lab Issues](#pre-lab-issues)
+- [Phase 1: Switch Configuration](#phase-1-switch-configuration)
+- [Phase 2: Proxmox Network](#phase-2-proxmox-network)
+- [Phase 3: Routing and Firewall](#phase-3-routing-and-firewall)
+- [Phase 4: VM Migration](#phase-4-vm-migration)
+- [Phase 5: Kali VM on VLAN 30](#phase-5-kali-vm-on-vlan-30)
+- [Phase 6: Testing Issues](#phase-6-testing-issues)
+- [Emergency Rollback](#emergency-rollback)
+
+---
+
+## Pre-Lab Issues
+
+### Problem: Can't Find Netgear Switch Model Number
+
+**Symptoms:**
+- Unsure if you have the correct switch model
+- Can't verify VLAN support
+
+**Solution:**
+
+1. Check the front panel label (usually bottom right)
+2. Check the bottom/back of the switch
+3. Access any IP the switch might be at and check web GUI
+4. If completely unknown, try default 192.168.0.239
+
+**Verification:**
+
+```bash
+# From PC, try to access common default IPs
+ping 192.168.0.239
+ping 192.168.1.1
+ping 192.168.0.1
+```
+
+Look for model number in web interface under: **System > System Information**
+
+---
+
+### Problem: Splunk VM Not Running or Accessible
+
+**Symptoms:**
+- Can't access Splunk at http://10.0.0.10:8000 (pre-migration) or http://10.30.0.10:8000 (post-migration)
+- VM shows as stopped in Proxmox
+
+**Solution:**
+
+```bash
+# On Proxmox shell
+qm list
+qm status 100  # Replace 100 with your Splunk VM ID
+
+# If stopped, start it
+qm start 100
+
+# Wait 60 seconds for boot
+sleep 60
+
+# Test connectivity
+ping 10.0.0.10
+
+# If ping fails, check VM console
+# In Proxmox web GUI: VM 100 > Console
+```
+
+If VM won't start, check:
+- Disk space: `df -h`
+- VM config: `qm config 100`
+- Proxmox logs: `journalctl -u pve-cluster -n 50`
+
+---
+
+### Problem: No Backup of Proxmox Configuration
+
+**Symptoms:**
+- Didn't create backup before starting lab
+- Worried about breaking current setup
+
+**Solution:**
+
+Stop immediately and create backup NOW before proceeding:
+
+```bash
+# On Proxmox shell
+mkdir -p /root/backups/pre-lab00b
+cp /etc/network/interfaces /root/backups/pre-lab00b/
+iptables-save > /root/backups/pre-lab00b/iptables-backup.txt
+
+# Create VM snapshot
+qm snapshot 100 pre-lab00b-migration
+
+# Verify backup exists
+ls -lh /root/backups/pre-lab00b/
+```
+
+---
+
+## Phase 1: Switch Configuration
+
+### Problem: Can't Access Switch at 192.168.0.239
+
+**Symptoms:**
+- Browser shows "Can't reach this page" or timeout
+- Ping to 192.168.0.239 fails
+
+**Diagnosis:**
+
+```bash
+# From PC
+ping 192.168.0.239
+# If fails, check your PC IP
+ipconfig  # Windows
+ip addr show  # Linux
+```
+
+**Solution 1: PC Not on Correct Subnet**
+
+Your PC must be on 192.168.0.0/24 network to access switch.
+
+**Windows:**
+1. Network Settings > Change Adapter Options
+2. Right-click Ethernet > Properties
+3. IPv4 > Properties > Use following IP:
+   - IP: 192.168.0.100
+   - Subnet: 255.255.255.0
+   - Gateway: (leave blank)
+4. OK, Apply
+
+**Linux:**
+```bash
+sudo ip addr add 192.168.0.100/24 dev eth0
+sudo ip link set eth0 up
+ping 192.168.0.239
+```
+
+**Solution 2: Switch Not Factory Reset**
+
+Switch may have different IP from previous configuration.
+
+1. Perform factory reset: Hold reset button 10 seconds while powered on
+2. Wait 2 minutes for reboot
+3. Try 192.168.0.239 again
+
+**Solution 3: Cable Issue**
+
+1. Verify cable is connected: PC Ethernet port → Switch Port 1
+2. Check link lights on both PC and switch port
+3. Try different cable
+4. Try different switch port
+
+---
+
+### Problem: Forgot Switch Admin Password
+
+**Symptoms:**
+- Can access web GUI but don't know password
+- Previously changed from default "password"
+
+**Solution:**
+
+Factory reset required:
+
+1. Power off switch
+2. Hold reset button
+3. Power on while holding reset button
+4. Keep holding for 10 seconds
+5. Release and wait 2 minutes
+6. Default credentials restored:
+   - Username: admin
+   - Password: password
+
+**WARNING:** This erases all configuration. You'll need to reconfigure VLANs from scratch.
+
+---
+
+### Problem: Can't Access Switch After Changing Management IP
+
+**Symptoms:**
+- Changed switch IP to 192.168.4.250
+- Browser loses connection
+- Can't access new IP
+
+**Solution:**
+
+Your PC is still configured with static IP on 192.168.0.0/24 network.
+
+**Windows:**
+
+1. Network Settings > Change Adapter Options
+2. Ethernet > Properties > IPv4
+3. Change to "Obtain IP automatically" (DHCP)
+4. OR set static IP on new network:
+   - IP: 192.168.4.100
+   - Subnet: 255.255.255.0
+   - Gateway: 192.168.4.1
+5. Apply
+
+**Linux:**
+
+```bash
+# Remove old static IP
+sudo ip addr del 192.168.0.100/24 dev eth0
+
+# Get DHCP address
+sudo dhclient eth0
+
+# Or set new static IP
+sudo ip addr add 192.168.4.100/24 dev eth0
+sudo ip route add default via 192.168.4.1
+```
+
+**Verify:**
+
+```bash
+ping 192.168.4.250
+# Should succeed now
+```
+
+Open browser to: `http://192.168.4.250`
+
+---
+
+### Problem: VLAN Creation Fails or VLANs Don't Appear
+
+**Symptoms:**
+- Create VLAN but it doesn't appear in list
+- "VLAN already exists" error
+- Can't name VLANs
+
+**Solution:**
+
+**Check VLAN ID Range:**
+- Valid VLAN IDs: 2-4094
+- VLAN 1 is reserved (management VLAN)
+- Don't create VLAN 1 manually
+
+**Check VLAN Name Restrictions:**
+- Max length: Usually 32 characters
+- Allowed characters: Letters, numbers, underscores, hyphens
+- No spaces (use underscores: AD_SERVERS not "AD SERVERS")
+
+**Verify VLAN List:**
+
+Navigate to: **VLAN > 802.1Q > VLAN Configuration**
+
+If VLANs still missing:
+1. Refresh browser page
+2. Log out and back in to switch
+3. Reboot switch: **Maintenance > Reboot**
+
+---
+
+### Problem: Proxmox Loses Management Access After Trunk Port Configuration
+
+**Symptoms:**
+- Configured Port 2 as trunk on switch
+- Proxmox web GUI (192.168.4.X:8006) no longer accessible
+- Ping to Proxmox management IP fails
+
+**Root Cause:**
+
+VLAN 1 (management) was set as **Tagged (T)** on Port 2, but Proxmox doesn't have VLAN-aware bridging enabled yet. Proxmox can't read tagged frames, so management traffic is dropped.
+
+**Solution:**
+
+VLAN 1 must be **Untagged (U)** on the trunk port. Only VLANs 10, 20, 30 should be Tagged.
+
+1. Access switch from a PC plugged into **Port 3-8** (these are VLAN 1 Untagged access ports)
+2. Browse to `http://192.168.4.250`
+3. Navigate to: **Switching > VLAN > 802.1Q > VLAN Membership**
+4. Select **VLAN 1** from dropdown
+5. Change **Port 2** from **T** to **U** (Untagged)
+6. Click **Apply**
+
+**Why?** The PVID setting (Port VLAN ID = 1) means "untagged traffic on this port belongs to VLAN 1." Setting VLAN 1 as both PVID and Tagged contradicts this. The native/management VLAN should always be Untagged on a trunk port.
+
+**Correct Port 2 Configuration:**
+
+| VLAN | Mode | Reason |
+|------|------|--------|
+| 1 | **U** (Untagged) | Management - must work without VLAN awareness |
+| 10 | **T** (Tagged) | Proxmox reads tag to route to vmbr0.10 |
+| 20 | **T** (Tagged) | Proxmox reads tag to route to vmbr0.20 |
+| 30 | **T** (Tagged) | Proxmox reads tag to route to vmbr0.30 |
+
+---
+
+### Problem: Trunk Port Not Passing VLAN Tags
+
+**Symptoms:**
+- Port 2 configured but VMs on VLANs can't communicate
+- tcpdump doesn't show VLAN tags
+
+**Diagnosis:**
+
+Check port configuration on switch:
+
+Navigate to: **Switching > VLAN > 802.1Q > VLAN Membership**
+
+Verify:
+- **VLAN 1:** Port 2 = **U** (Untagged)
+- **VLAN 10:** Port 2 = **T** (Tagged)
+- **VLAN 20:** Port 2 = **T** (Tagged)
+- **VLAN 30:** Port 2 = **T** (Tagged)
+
+**Solution:**
+
+Re-configure Port 2 if any membership is wrong:
+
+1. **Switching > VLAN > 802.1Q > Port PVID Configuration**
+   - Port 2 PVID: 1
+   - Apply
+
+2. **Switching > VLAN > 802.1Q > VLAN Membership**
+   - Select VLAN 1 → Set Port 2 to **U** → Apply
+   - Select VLAN 10 → Set Port 2 to **T** → Apply
+   - Select VLAN 20 → Set Port 2 to **T** → Apply
+   - Select VLAN 30 → Set Port 2 to **T** → Apply
+
+---
+
+### Problem: VLAN Config is Under Wrong Menu
+
+**Symptoms:**
+- Looking for VLAN configuration but only see "VLAN Routing Wizard"
+- Can't find where to create VLANs
+
+**Solution:**
+
+On the Netgear GS510TLP, there are two VLAN sections:
+
+- **Routing > VLAN** - This is Layer 3 VLAN routing (assigning IPs to VLANs on the switch). **You don't need this.**
+- **Switching > VLAN** - This is where 802.1Q VLAN configuration lives. **Use this one.**
+
+Navigate to: **Switching > VLAN > Basic > VLAN Configuration** to create VLANs.
+
+---
+
+## Phase 2: Proxmox Network
+
+### Problem: Proxmox Loses Network After Configuration Change
+
+**Symptoms:**
+- Applied network config, now can't access Proxmox web GUI
+- Ping to Proxmox management IP fails
+- SSH connection dropped
+
+**Diagnosis:**
+
+This means configuration error in `/etc/network/interfaces`.
+
+**Solution:**
+
+**Option 1: Access via Proxmox Console (if physical access or iKVM)**
+
+1. Connect keyboard/monitor to Proxmox server
+2. Login as root
+3. Restore backup:
+
+```bash
+cp /etc/network/interfaces.backup-YYYYMMDD /etc/network/interfaces
+systemctl restart networking
+```
+
+4. Verify connectivity:
+
+```bash
+ip addr show vmbr0
+ping 192.168.4.1
+```
+
+**Option 2: No Physical Access**
+
+You'll need to power cycle the server and hope it reverts, or you'll need physical access.
+
+**Prevention:**
+
+Always test config before making permanent:
+
+```bash
+# Test without rebooting
+ifup vmbr0.10
+ifup vmbr0.20
+ifup vmbr0.30
+
+# If it works, then reboot
+# If it fails, config is wrong - fix before reboot
+```
+
+---
+
+### Problem: VLAN Subinterfaces Don't Come Up
+
+**Symptoms:**
+- `ip addr show` doesn't show vmbr0.10, vmbr0.20, vmbr0.30
+- Only vmbr0 is listed
+
+**Diagnosis:**
+
+```bash
+ip link show | grep vmbr0
+# Should show vmbr0, vmbr0.10, vmbr0.20, vmbr0.30
+```
+
+**Solution 1: Check Interface Names**
+
+Edit `/etc/network/interfaces`:
+
+```bash
+nano /etc/network/interfaces
+```
+
+Verify exact syntax:
+
+```
+auto vmbr0.10
+iface vmbr0.10 inet static
+    address 10.10.0.1/24
+    vlan-raw-device vmbr0
+```
+
+Common mistakes:
+- Missing `auto vmbr0.10` line
+- Typo in interface name (vmbr0.1 instead of vmbr0.10)
+- Missing `vlan-raw-device vmbr0` line
+- Wrong indentation (must be 4 spaces)
+
+**Solution 2: Bring Interfaces Up Manually**
+
+```bash
+ifup vmbr0.10
+ifup vmbr0.20
+ifup vmbr0.30
+
+# Check status
+ip addr show vmbr0.10
+```
+
+If error message appears, it indicates what's wrong.
+
+**Solution 3: Ensure VLAN Package Installed**
+
+```bash
+apt update
+apt install vlan
+modprobe 8021q
+
+# Verify module loaded
+lsmod | grep 8021q
+```
+
+**Solution 4: Reboot Proxmox**
+
+Sometimes interfaces need full reboot to come up:
+
+```bash
+reboot
+```
+
+After reboot, verify:
+
+```bash
+ip link show | grep vmbr0
+ip addr show vmbr0.10
+```
+
+---
+
+### Problem: Bridge VLAN Awareness Not Working
+
+**Symptoms:**
+- `bridge vlan show` shows no VLANs
+- VMs on VLANs can't communicate
+
+**Diagnosis:**
+
+```bash
+bridge vlan show
+# Should show vmbr0 with VLANs 1, 10, 20, 30 listed
+```
+
+**Solution:**
+
+Check vmbr0 configuration in `/etc/network/interfaces`:
+
+```bash
+nano /etc/network/interfaces
+```
+
+Must include these two lines in vmbr0 section:
+
+```
+bridge-vlan-aware yes
+bridge-vids 2-4094
+```
+
+Full correct configuration:
+
+```
+auto vmbr0
+iface vmbr0 inet static
+    address 192.168.4.X/24
+    gateway 192.168.4.1
+    bridge-ports nic0
+    bridge-stp off
+    bridge-fd 0
+    bridge-vlan-aware yes
+    bridge-vids 2-4094
+```
+
+After fixing, restart networking:
+
+```bash
+systemctl restart networking
+# Or reboot
+```
+
+---
+
+### Problem: Can't Remove vmbr1
+
+**Symptoms:**
+- Deleted vmbr1 from config but it still shows in `ip addr`
+- "Device or resource busy" error
+
+**Solution:**
+
+**Check if VMs are using vmbr1:**
+
+```bash
+grep -r vmbr1 /etc/pve/qemu-server/
+# If any VMs use vmbr1, migrate them first
+```
+
+**Shutdown VMs on vmbr1:**
+
+```bash
+qm list
+qm shutdown <vmid>  # For each VM using vmbr1
+```
+
+**Remove bridge:**
+
+```bash
+ip link set vmbr1 down
+brctl delbr vmbr1
+```
+
+**Verify removed:**
+
+```bash
+ip link show | grep vmbr1
+# Should return nothing
+```
+
+**Make permanent:**
+
+Ensure vmbr1 section is deleted from `/etc/network/interfaces`, then reboot.
+
+---
+
+## Phase 3: Routing and Firewall
+
+### Problem: No Inter-VLAN Connectivity
+
+**Symptoms:**
+- Can ping VLAN gateway (10.30.0.1) from VM on that VLAN
+- Can't ping other VLAN gateways (10.10.0.1, 10.20.0.1)
+- Can't reach internet from VLAN VMs
+
+**Diagnosis:**
+
+Test connectivity step by step:
+
+```bash
+# From VM on VLAN 30 (e.g., Splunk)
+ping 10.30.0.1        # Local gateway (should work)
+ping 10.20.0.1        # Other VLAN gateway (tests routing)
+ping 192.168.4.1      # Router (tests outbound routing)
+ping 8.8.8.8          # Internet (tests NAT)
+```
+
+**Solution 1: IP Forwarding Not Enabled**
+
+```bash
+# On Proxmox
+sysctl net.ipv4.ip_forward
+# Should output: net.ipv4.ip_forward = 1
+```
+
+If it shows 0:
+
+```bash
+echo 1 > /proc/sys/net/ipv4/ip_forward
+sysctl -p
+```
+
+Make permanent:
+
+```bash
+nano /etc/sysctl.conf
+# Uncomment or add:
+net.ipv4.ip_forward=1
+```
+
+**Solution 2: iptables FORWARD Policy is DROP**
+
+```bash
+# On Proxmox
+iptables -L FORWARD -v -n
+# Check policy line
+```
+
+If policy is DROP:
+
+```bash
+iptables -P FORWARD ACCEPT
+netfilter-persistent save
+```
+
+**Solution 3: Missing NAT Rules**
+
+```bash
+# On Proxmox
+iptables -t nat -L POSTROUTING -v -n
+```
+
+Should show MASQUERADE rules for 10.10.0.0/24, 10.20.0.0/24, 10.30.0.0/24.
+
+If missing:
+
+```bash
+iptables -t nat -A POSTROUTING -s 10.10.0.0/24 -o vmbr0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.20.0.0/24 -o vmbr0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.30.0.0/24 -o vmbr0 -j MASQUERADE
+netfilter-persistent save
+```
+
+**Solution 4: Wrong NAT Interface**
+
+NAT should be on vmbr0 (outbound interface), NOT vmbr0.10/20/30.
+
+Verify:
+
+```bash
+iptables -t nat -L POSTROUTING -v -n
+# "out" column should show vmbr0
+```
+
+If wrong, flush and re-add:
+
+```bash
+iptables -t nat -F POSTROUTING
+iptables -t nat -A POSTROUTING -s 10.10.0.0/24 -o vmbr0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.20.0.0/24 -o vmbr0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.30.0.0/24 -o vmbr0 -j MASQUERADE
+netfilter-persistent save
+```
+
+---
+
+### Problem: VMs Can't Access Internet
+
+**Symptoms:**
+- VMs can ping their gateway
+- VMs can ping other VLAN gateways
+- VMs can't ping 8.8.8.8 or reach internet
+
+**Diagnosis:**
+
+```bash
+# From VLAN VM
+ping 10.30.0.1        # Gateway (should work)
+ping 192.168.4.1      # Router (tests if routing to mgmt network works)
+ping 8.8.8.8          # Internet (tests NAT)
+
+# If router ping works but internet fails, it's NAT or DNS
+# If router ping fails, it's routing
+```
+
+**Solution 1: Missing Default Route on VM**
+
+```bash
+# On VLAN VM
+ip route show
+# Should show: default via 10.30.0.1 dev ens18
+```
+
+If missing:
+
+```bash
+sudo ip route add default via 10.30.0.1
+# Make permanent by fixing netplan or /etc/network/interfaces
+```
+
+**Solution 2: NAT Not Working**
+
+From Proxmox, capture traffic on outbound interface:
+
+```bash
+tcpdump -i vmbr0 -n icmp
+# Then from VLAN VM, ping 8.8.8.8
+```
+
+You should see ICMP packets with source IP 192.168.4.X (Proxmox), NOT 10.30.0.10 (VM).
+
+If you see 10.30.0.10 as source, NAT isn't translating.
+
+Fix:
+
+```bash
+# On Proxmox
+iptables -t nat -L POSTROUTING -v -n
+# Verify MASQUERADE rules exist
+
+# If missing, add them
+iptables -t nat -A POSTROUTING -s 10.30.0.0/24 -o vmbr0 -j MASQUERADE
+netfilter-persistent save
+```
+
+**Solution 3: DNS Not Configured on VM**
+
+```bash
+# On VLAN VM
+cat /etc/resolv.conf
+# Should show nameserver entries
+```
+
+If missing or wrong:
+
+```bash
+sudo nano /etc/resolv.conf
+```
+
+Add:
+```
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+```
+
+For Ubuntu with netplan:
+
+```bash
+sudo nano /etc/netplan/00-installer-config.yaml
+```
+
+Add under interface:
+```yaml
+nameservers:
+  addresses:
+    - 8.8.8.8
+    - 8.8.4.4
+```
+
+Apply:
+```bash
+sudo netplan apply
+```
+
+---
+
+### Problem: iptables Rules Disappear After Reboot
+
+**Symptoms:**
+- Configured iptables rules
+- After Proxmox reboot, rules are gone
+- Have to re-run iptables commands
+
+**Solution:**
+
+Install and configure iptables-persistent:
+
+```bash
+# On Proxmox
+apt update
+apt install iptables-persistent -y
+
+# During install, say YES to save current rules
+
+# Manually save rules anytime
+netfilter-persistent save
+
+# Verify rules are saved
+cat /etc/iptables/rules.v4
+# Should contain your NAT and FORWARD rules
+```
+
+**If rules still disappear:**
+
+Check for conflicting firewall services:
+
+```bash
+systemctl status firewalld
+systemctl status ufw
+
+# If active, they may override iptables
+# Disable them:
+systemctl stop firewalld
+systemctl disable firewalld
+```
+
+---
+
+## Phase 4: VM Migration
+
+### Problem: VM Won't Start After Network Change
+
+**Symptoms:**
+- Changed VM to VLAN 30
+- VM fails to start or starts but has no network
+
+**Diagnosis:**
+
+```bash
+# On Proxmox
+qm status 100
+# If stopped with error, check logs
+qm start 100
+journalctl -u qemu-server -n 50
+```
+
+**Solution 1: Invalid VLAN Tag**
+
+Check VM network configuration:
+
+```bash
+qm config 100 | grep net0
+```
+
+Should show: `tag=30,bridge=vmbr0`
+
+If tag is invalid (0, 4095+, or missing):
+
+```bash
+qm set 100 -net0 virtio,bridge=vmbr0,tag=30,firewall=1
+```
+
+**Solution 2: Bridge Doesn't Exist**
+
+If you see `bridge=vmbr1` but vmbr1 was deleted:
+
+```bash
+qm set 100 -net0 virtio,bridge=vmbr0,tag=30,firewall=1
+```
+
+**Solution 3: Rollback to Snapshot**
+
+If VM is broken and you need to start over:
+
+```bash
+qm listsnapshot 100
+qm rollback 100 pre-lab00b-migration
+qm start 100
+# Try migration again
+```
+
+---
+
+### Problem: VM Has Network But Wrong IP
+
+**Symptoms:**
+- VM started successfully
+- VM has DHCP IP from management network (192.168.4.X)
+- Should have static IP on VLAN 30 (10.30.0.10)
+
+**Diagnosis:**
+
+VLAN tag may not be applied correctly, or VM is getting DHCP from VLAN 1.
+
+```bash
+# Inside VM
+ip addr show
+# Shows 192.168.4.X instead of 10.30.0.10
+```
+
+**Solution:**
+
+**Check VLAN tag on Proxmox:**
+
+```bash
+# On Proxmox
+qm config 100 | grep net0
+# Must show: tag=30
+```
+
+If missing tag:
+
+```bash
+qm shutdown 100
+qm set 100 -net0 virtio,bridge=vmbr0,tag=30,firewall=1
+qm start 100
+```
+
+**Reconfigure static IP inside VM:**
+
+First, find the correct netplan file and interface name:
+
+```bash
+# Inside VM (Ubuntu)
+ls /etc/netplan/
+# Could be: 00-installer-config.yaml, 50-cloud-init.yaml, or similar
+
+ip link show
+# Interface name could be: ens18, enp6s18, eth0, etc.
+```
+
+Edit whichever netplan file exists:
+
+```bash
+sudo nano /etc/netplan/50-cloud-init.yaml  # or your actual filename
+```
+
+Set (using your actual interface name):
+```yaml
+network:
+  version: 2
+  ethernets:
+    enp6s18:  # Use YOUR actual interface name
+      addresses:
+        - 10.30.0.10/24
+      routes:
+        - to: default
+          via: 10.30.0.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+```
+
+Apply:
+```bash
+sudo netplan apply
+```
+
+> **Note:** The netplan filename and interface name vary by installation. Check with `ls /etc/netplan/` and `ip link show` before editing.
+
+---
+
+### Problem: Splunk Services Won't Start After Migration
+
+**Symptoms:**
+- VM has correct IP on VLAN 30
+- Splunk web interface not accessible
+- Port 8000 not responding
+
+**Diagnosis:**
+
+```bash
+# Inside Splunk VM
+sudo -u splunk /opt/splunk/bin/splunk status
+```
+
+If not running:
+
+```bash
+sudo -u splunk /opt/splunk/bin/splunk start
+```
+
+**If start fails:**
+
+Check Splunk logs:
+
+```bash
+sudo tail -50 /opt/splunk/var/log/splunk/splunkd.log
+# Look for errors
+```
+
+**Solution 1: Firewall Blocking**
+
+```bash
+# Inside Splunk VM
+sudo ufw status
+```
+
+If active and blocking:
+
+```bash
+sudo ufw allow 8000/tcp
+sudo ufw allow 9997/tcp
+sudo ufw reload
+```
+
+**Solution 2: Splunk Listening on Wrong Interface**
+
+Check what Splunk is bound to:
+
+```bash
+sudo netstat -tulpn | grep splunkd
+```
+
+Should show:
+```
+tcp  0.0.0.0:8000  LISTEN  splunkd
+tcp  0.0.0.0:9997  LISTEN  splunkd
+```
+
+If it shows `127.0.0.1:8000`, Splunk is only listening locally.
+
+Fix in Splunk config:
+
+```bash
+# Edit web.conf
+sudo -u splunk nano /opt/splunk/etc/system/local/web.conf
+```
+
+Add/modify:
+```
+[settings]
+httpport = 0.0.0.0:8000
+```
+
+Restart Splunk:
+```bash
+sudo -u splunk /opt/splunk/bin/splunk restart
+```
+
+---
+
+### Problem: Can't Access Splunk Web from Kali
+
+**Symptoms:**
+- Splunk is running on 10.30.0.10
+- Kali can ping 10.30.0.10
+- Browser shows "Connection refused" or timeout on http://10.30.0.10:8000
+
+**Diagnosis:**
+
+```bash
+# From Kali
+telnet 10.30.0.10 8000
+# Or
+nc -zv 10.30.0.10 8000
+```
+
+If "Connection refused": Port is closed or firewalled
+If "Timeout": Routing issue or firewall dropping packets
+
+**Solution 1: Firewall on Splunk VM**
+
+```bash
+# Inside Splunk VM
+sudo ufw allow from 10.30.0.0/24 to any port 8000
+sudo ufw allow from 192.168.4.0/24 to any port 8000
+```
+
+**Solution 2: Routing Issue**
+
+From Kali, verify route to VLAN 30 exists:
+
+```bash
+ip route show | grep 10.30.0.0
+# Should show: 10.30.0.0/24 via 192.168.4.X
+```
+
+If missing, add route (see Phase 5 section below).
+
+**Solution 3: Proxmox Firewall**
+
+Proxmox VM firewall might be enabled:
+
+In Proxmox GUI: VM 100 > Firewall > Options
+
+Set **Firewall:** No
+
+---
+
+## Phase 5: Kali VM on VLAN 30
+
+Kali runs as a VM on Proxmox on VLAN 30 (10.30.0.50) alongside Splunk. No static routes are needed from Kali since it's on the same network segment, and cross-VLAN access works via Proxmox inter-VLAN routing.
+
+### Problem: Kali Still Has Old IP After VLAN Migration
+
+**Symptoms:**
+- Changed Kali VM to vmbr0 with VLAN tag 30
+- `ip addr show` still shows old 10.0.0.50/24 address
+- Or shows both old and new IPs
+
+**Solution:**
+
+Remove old IP and set new one:
+
+```bash
+# Remove old IP
+sudo ip addr del 10.0.0.50/24 dev eth0
+
+# Set new IP
+sudo ip addr add 10.30.0.50/24 dev eth0
+sudo ip route add default via 10.30.0.1
+
+# Verify only new IP shows
+ip addr show eth0
+```
+
+Make persistent by creating a config file:
+
+```bash
+sudo nano /etc/network/interfaces.d/eth0
+```
+
+Add:
+```
+auto eth0
+iface eth0 inet static
+    address 10.30.0.50/24
+    gateway 10.30.0.1
+    dns-nameservers 8.8.8.8 8.8.4.4
+```
+
+Reboot to verify it sticks.
+
+> **Note:** Kali on Proxmox may not have NetworkManager installed. Check with `ls /etc/NetworkManager/`. If it doesn't exist, use `/etc/network/interfaces.d/` as shown above.
+
+---
+
+### Problem: Kali Can't Reach Other VLANs
+
+**Symptoms:**
+- Kali (10.30.0.50) can ping Splunk (10.30.0.10) on same VLAN
+- Can't ping VLAN 10 or 20 gateways (10.10.0.1, 10.20.0.1)
+
+**Diagnosis:**
+
+```bash
+# From Kali
+ping -c 3 10.30.0.1   # VLAN 30 gateway (should work)
+ping -c 3 10.10.0.1   # VLAN 10 gateway (tests cross-VLAN routing)
+```
+
+**Solution:**
+
+Check Proxmox IP forwarding and iptables (see Phase 3 troubleshooting above).
+
+Cross-VLAN routing from Kali goes: Kali → Proxmox (10.30.0.1) → routes to destination VLAN. If the gateway ping works but cross-VLAN fails, it's a routing or firewall issue on Proxmox.
+
+---
+
+### Problem: Windows PC Can't Access VLAN Subnets in Browser
+
+**Symptoms:**
+- Windows PC on management network (192.168.4.x) can access Proxmox web GUI
+- Can't open `http://10.30.0.10:8000` (Splunk) in browser
+- Can't reach any 10.x.x.x addresses
+
+**Solution:**
+
+Windows PC needs static routes to reach VLAN subnets via Proxmox. Open **PowerShell as Administrator**:
+
+```powershell
+route add 10.10.0.0 mask 255.255.255.0 192.168.4.10 -p
+route add 10.20.0.0 mask 255.255.255.0 192.168.4.10 -p
+route add 10.30.0.0 mask 255.255.255.0 192.168.4.10 -p
+```
+
+The `-p` flag makes routes persistent across reboots.
+
+**Verify:**
+
+```powershell
+route print | findstr 10.
+ping 10.30.0.10
+```
+
+---
+
+## Phase 6: Testing Issues
+
+### Problem: tcpdump Shows No VLAN Tags
+
+**Symptoms:**
+- Running `tcpdump -i nic0 vlan` on Proxmox
+- No packets captured or packets show without VLAN tags
+
+**Diagnosis:**
+
+**Issue 1: Wrong interface**
+
+tcpdump must run on physical interface (nic0), NOT bridge (vmbr0).
+
+```bash
+# Wrong:
+tcpdump -i vmbr0 -e vlan
+
+# Correct:
+tcpdump -i nic0 -e vlan
+```
+
+**Issue 2: No traffic flowing**
+
+Generate traffic first:
+
+```bash
+# From Kali
+ping 10.30.0.10
+
+# Then on Proxmox
+tcpdump -i nic0 -e -n vlan
+```
+
+**Solution:**
+
+Correct command:
+
+```bash
+# On Proxmox
+tcpdump -i nic0 -e -n -c 20 vlan and host 10.30.0.10
+```
+
+You should see output like:
+```
+15:30:22.123456 ... vlan 30, p 0, ethertype IPv4, 10.30.0.10 > 8.8.8.8: ICMP
+```
+
+Look for **`vlan 30`** in the output.
+
+---
+
+### Problem: Nmap Scan Shows No Hosts
+
+**Symptoms:**
+- Running `nmap -sn 10.30.0.0/24` from Kali
+- Shows 0 hosts up
+- Know that Splunk VM (10.30.0.10) is running
+
+**Diagnosis:**
+
+**Issue 1: Routing**
+
+```bash
+# On Kali
+ip route show | grep 10.30.0.0
+# Must have route via Proxmox
+```
+
+**Issue 2: Firewall blocking ICMP**
+
+```bash
+# From Kali
+ping 10.30.0.10
+# If ping fails, it's not network discovery issue, it's basic connectivity
+```
+
+**Solution:**
+
+**Fix routing (if missing):**
+
+```bash
+# On Kali
+sudo ip route add 10.30.0.0/24 via 192.168.4.X
+ping 10.30.0.10
+```
+
+**Use different Nmap scan types:**
+
+```bash
+# Try TCP ping instead of ICMP
+sudo nmap -sn -PS 10.30.0.0/24
+
+# Or scan specific host with version detection
+sudo nmap -sV -p 8000,9997 10.30.0.10
+```
+
+**Check firewall on target:**
+
+```bash
+# Inside Splunk VM
+sudo ufw status
+
+# If active, allow Nmap scans
+sudo ufw allow from 192.168.4.0/24
+```
+
+---
+
+### Problem: Port Scans Show Ports as Filtered
+
+**Symptoms:**
+- Nmap shows ports as "filtered" instead of "open" or "closed"
+- Know service is running (e.g., Splunk on 8000)
+
+**Diagnosis:**
+
+"Filtered" means firewall is dropping packets (no response).
+
+**Solution:**
+
+**Check target firewall:**
+
+```bash
+# Inside Splunk VM
+sudo ufw status verbose
+
+# If active, allow scanning network
+sudo ufw allow from 192.168.4.0/24
+sudo ufw reload
+```
+
+**Check Proxmox iptables:**
+
+```bash
+# On Proxmox
+iptables -L FORWARD -v -n
+# Ensure ACCEPT policy or explicit allow rules exist
+```
+
+**Try from different source:**
+
+```bash
+# From Proxmox host itself
+nmap -p 8000 10.30.0.10
+# If this works but Kali scan doesn't, it's inter-VLAN firewall
+```
+
+---
+
+## Emergency Rollback
+
+### When to Rollback
+
+Rollback if:
+- Proxmox is inaccessible after network config change
+- VMs won't start after migration
+- You've broken something and don't know how to fix it
+- Lab is taking too long and you need to start over
+
+### Full Rollback Procedure
+
+**Step 1: Restore Proxmox Network Configuration**
+
+```bash
+# On Proxmox (via console or SSH if still accessible)
+cp /etc/network/interfaces.backup-YYYYMMDD /etc/network/interfaces
+systemctl restart networking
+# Or reboot for clean state
+reboot
+```
+
+**Step 2: Restore iptables Rules**
+
+```bash
+# On Proxmox
+iptables-restore < /root/backups/pre-lab00b/iptables-backup.txt
+netfilter-persistent save
+```
+
+**Step 3: Rollback VM to Snapshot**
+
+```bash
+# On Proxmox
+qm listsnapshot 100
+qm rollback 100 pre-lab00b-migration
+qm start 100
+```
+
+**Step 4: Verify Everything Works**
+
+```bash
+# Check Proxmox network
+ip addr show vmbr0
+ping 192.168.4.1
+
+# Check VM
+qm status 100
+ping 10.0.0.10
+curl http://10.0.0.10:8000
+```
+
+**Step 5: Reset Switch (if necessary)**
+
+If switch configuration is broken:
+
+1. Factory reset switch (hold reset button 10 seconds)
+2. Reconfigure management IP
+3. Leave VLANs unconfigured for now
+
+**Step 6: Retry Lab**
+
+- Review what went wrong
+- Re-read relevant README section
+- Check TROUBLESHOOTING.md for specific issue
+- Try again with more careful steps
+
+---
+
+## General Troubleshooting Tips
+
+### Layer-by-Layer Approach
+
+Always troubleshoot from bottom to top (OSI model):
+
+1. **Physical (Layer 1):**
+   - Are cables plugged in?
+   - Are link lights on?
+   - Is power on?
+
+2. **Data Link (Layer 2):**
+   - Is MAC address correct?
+   - Are VLANs configured?
+   - Is switch port in right VLAN?
+
+3. **Network (Layer 3):**
+   - Is IP address correct?
+   - Is subnet mask correct?
+   - Is default gateway set?
+   - Can you ping gateway?
+
+4. **Transport (Layer 4):**
+   - Is service running?
+   - Is port listening?
+   - Is firewall blocking?
+
+5. **Application (Layer 7):**
+   - Is service configured correctly?
+   - Are credentials correct?
+
+### Useful Diagnostic Commands
+
+**Proxmox:**
+```bash
+ip addr show                    # Show all IPs
+ip route show                   # Show routing table
+bridge vlan show                # Show VLAN config
+iptables -L -v -n              # Show firewall rules
+iptables -t nat -L -v -n       # Show NAT rules
+tcpdump -i nic0 -e vlan        # Capture VLAN tags
+systemctl status networking     # Check network service
+journalctl -xe                  # Recent system logs
+```
+
+**Inside VMs:**
+```bash
+ip addr show                    # Show IP config
+ip route show                   # Show routing
+ping <gateway>                  # Test gateway
+ping 8.8.8.8                    # Test internet
+sudo netstat -tulpn             # Show listening ports
+sudo ufw status                 # Check firewall
+cat /etc/resolv.conf           # Check DNS
+```
+
+**Kali/Client:**
+```bash
+ip route show                   # Show routes
+ping <target>                   # Basic connectivity
+traceroute <target>             # Path to target
+nmap -sn <subnet>              # Network discovery
+nc -zv <ip> <port>             # Port check
+curl -I http://<ip>:<port>     # HTTP check
+```
+
+---
+
+## Getting Help
+
+### Information to Gather Before Asking
+
+1. **Exact error message** (copy-paste, don't paraphrase)
+2. **What you were trying to do** (which phase, which step)
+3. **What you expected** vs **what actually happened**
+4. **Output of diagnostic commands:**
+   ```bash
+   ip addr show
+   ip route show
+   iptables -L -v -n
+   qm config <vmid>
+   ```
+5. **Your environment:**
+   - Proxmox version: `pveversion`
+   - Switch model
+   - VM OS and version
+
+### Where to Get Help
+
+- **Proxmox Forums:** https://forum.proxmox.com/
+- **Reddit:** r/homelab, r/Proxmox
+- **Discord:** Homelab Discord servers
+- **GitHub Issues:** Open issue on this repo with details
+
+---
+
+**Remember:** Most problems are due to typos, missing steps, or skipped verification checkpoints. Slow down, double-check syntax, and test incrementally.
+
+---
+
+**Last Updated:** 2026-02-15
+**Lab Version:** 1.0
