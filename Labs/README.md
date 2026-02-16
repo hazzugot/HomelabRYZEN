@@ -37,18 +37,18 @@ Proxmox bridge configuration with isolated lab network using iptables NAT. Found
 ---
 
 ### Lab 00B: Network Enhancement with VLAN Segmentation
-![Progress](https://img.shields.io/badge/Progress-0%25-red?style=flat-square)
+![Progress](https://img.shields.io/badge/Progress-100%25-brightgreen?style=flat-square)
 
 Upgrade from basic Proxmox bridges to enterprise-style 802.1Q VLAN segmentation using a Netgear GS510TLP managed switch. Replaces the TP-Link TL-SG105E and establishes the VLAN infrastructure used by all subsequent labs.
 
 | Component | Status |
 |-----------|--------|
-| GS510TLP VLAN Configuration (4 VLANs) | Not Started |
-| Proxmox VLAN-Aware Bridging | Not Started |
-| Inter-VLAN Routing via iptables | Not Started |
-| Splunk VM Migration to VLAN 30 | Not Started |
-| TL-SG105E Retirement | Not Started |
-| Kali Multi-VLAN Access | Not Started |
+| GS510TLP VLAN Configuration (4 VLANs) | Complete |
+| Proxmox VLAN-Aware Bridging | Complete |
+| Inter-VLAN Routing via iptables | Complete |
+| Splunk VM Migration to VLAN 30 | Complete |
+| TL-SG105E Retirement | Complete |
+| Kali Multi-VLAN Access | Complete |
 
 **VLANs:** MGMT (1) · AD Servers (10) · AD Workstations (20) · Security Tools (30)
 
