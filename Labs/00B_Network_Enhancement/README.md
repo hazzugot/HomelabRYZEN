@@ -46,9 +46,7 @@ Upgraded a flat homelab network to enterprise-grade VLAN segmentation using a Ne
 ## Documentation
 
 - [Full Lab Writeup](GITHUB_WRITEUP.md) - Detailed implementation with portfolio highlights
-- [Step-by-Step Guide](README.md) - Complete lab instructions
 - [Troubleshooting Guide](TROUBLESHOOTING.md) - Issues encountered and solutions
-- [Quick Reference](QUICK_REFERENCE.md) - Command cheat sheet
 
 ## Built With
 
