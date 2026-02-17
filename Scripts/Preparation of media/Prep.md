@@ -1,4 +1,4 @@
-#  aOrganizing Messy Photos and Videos with Automation
+#  Organizing Messy Photos and Videos with Automation
 
 This guide outlines a process to organize a messy collection of photos and videos into a date-ordered structure using a combination of PowerShell scripts and the `sortphotos` Python package.
 
