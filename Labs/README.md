@@ -77,17 +77,17 @@ Deployed Splunk Enterprise as a centralized SIEM with Windows endpoint telemetry
 ---
 
 ### 2. Active Directory Security Fundamentals
-![Progress](https://img.shields.io/badge/Progress-0%25-red?style=flat-square)
+![Progress](https://img.shields.io/badge/Progress-50%25-orange?style=flat-square)
 
 Build an enterprise Active Directory environment with VLAN-segmented infrastructure, Windows Event Forwarding to Splunk, and detection of core AD attack techniques. Advanced attacks (DCSync, Pass-the-Hash, Golden Ticket) are reserved for later labs where EDR and SOAR provide proper detection capabilities.
 
 | Component | Status |
 |-----------|--------|
-| Windows Server 2022 Domain Controller | Not Started |
-| OU Structure, Users & Groups (6 accounts) | Not Started |
-| Group Policy (Audit, PowerShell Logging) | Not Started |
-| Domain Join 2 Workstations | Not Started |
-| Windows Event Forwarding (WEF) to Splunk | Not Started |
+| Windows Server 2022 Domain Controller | Complete |
+| OU Structure, Users & Groups (6 accounts) | Complete |
+| Group Policy (Audit, PowerShell Logging) | Complete |
+| Domain Join 2 Workstations | Complete |
+| Windows Event Forwarding (WEF) to Splunk | Complete |
 | Splunk Integration (3 new indexes) | Not Started |
 | Attack Simulation (5 scenarios) | Not Started |
 | SPL Detection Rules (10 queries) | Not Started |
